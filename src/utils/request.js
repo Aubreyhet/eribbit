@@ -9,27 +9,30 @@ import router from '@/router'
 // 导出基准地址 供其他不使用axios用
 export const baseURL = 'http://pcapi-xiaotuxian-front-devtest.itheima.net/'
 const instance = axios.create({
+  // axios 的一些配置，baseURL  timeout
   baseURL,
   timeout: 5000
 })
 
 // 请求拦截器
-instance.interceptors.request.use((config) => {
-  // 拦截业务
-  // 进行请求配置的修改
-  const { profile } = store.state.user
-  // 判断token是否存在
-  if (profile.token) {
-    // 如果存在那就在请求中携带token
-    config.headers.Authorization = `Bearer ${profile.token}`
-  }
-  return config
-}, err => {
-  return Promise.reject(err)
-})
-
+instance.interceptors.request.use(
+  config => {
+    // 拦截业务逻辑
+    // 进行请求配置的修改
+    // 如果本地又token就在头部携带
+    // 1. 获取用户信息对象
+    const { profile } = store.state.user
+    // 2. 判断是否有token
+    if (profile.token) {
+    // 3. 设置token
+      config.headers.Authorization = `Bearer ${profile.token}`
+    }
+    return config
+  }, err => {
+    return Promise.reject(err)
+  })
 // 响应拦截器
-instance.interceptors.request.use(res => {
+instance.interceptors.response.use(res => {
   return res.data
 }, err => {
   // 错误处理
@@ -48,12 +51,4 @@ instance.interceptors.request.use(res => {
   return Promise.reject(err)
 })
 
-// 请求工具
-export default (url, method, submitData) => {
-  // 负责请求 请求地址 请求方式 ，提交的数据
-  return instance({
-    url,
-    method,
-    [method.toLowerCase() === 'get' ? 'params' : 'data']: submitData
-  })
-}
+export default instance
